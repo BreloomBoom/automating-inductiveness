@@ -5,6 +5,7 @@ This repository holds specifications for distributed protocols in TLA+ and Ivy. 
 ## Tools Used
 
 endive: takes TLA+ Specification (protocol.tla) and configuration file (protocol.config.json)
+
 SWISS - takes Ivy Specification
 
 ## Protocols
