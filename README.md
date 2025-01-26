@@ -4,9 +4,11 @@ This repository holds specifications for distributed protocols in TLA+ and Ivy. 
 
 ## Tools Used
 
-endive: takes TLA+ Specification (protocol.tla) and configuration file (protocol.config.json)
+[endive](https://github.com/will62794/endive) ([paper](https://arxiv.org/pdf/2205.06360)): takes TLA+ Specification (protocol.tla) and configuration file (protocol.config.json)
 
-SWISS - takes Ivy Specification
+[scimitar](https://github.com/will62794/scimitar/) ([paper](https://will62794.github.io/assets/papers/interpretable-verification-2024.pdf)): takes TLA+ Specification (protocol.tla) and configuration file (protocol.config.json)
+
+[SWISS](https://github.com/secure-foundations/SWISS) ([paper](https://www.andrew.cmu.edu/user/bparno/papers/swiss.pdf)): takes Ivy Specification
 
 ## Protocols
 
