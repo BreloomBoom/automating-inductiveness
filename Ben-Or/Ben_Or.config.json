@@ -1,0 +1,54 @@
+{
+    "preds"  :  [
+        "value[p1] = v",
+        "value[p2] = v",
+        "p1 \\in decision",
+        "p2 \\in decision",
+        "step[p1] = 1",
+        "step[p2] = 1",
+        "step[p1] = 2",
+        "step[p2] = 2",
+        "step[p1] = 3",
+        "step[p2] = 3",
+        "type1[r][p1] = a",
+        "type1[r][p2] = a",
+        "type2D[r][p1] = a",
+        "type2D[r][p2] = a",
+        "type2D[r][p1] = NoDecision",
+        "type2D[r][p2] = NoDecision",
+        "type2Q[r][p1] = b",
+        "type2Q[r][p2] = b",
+        "type2Q[r][p1] = TRUE",
+        "type2Q[r][p2] = TRUE",
+        "round[p1] > 1 /\\ ExistsQuorum(round[p1] - 1, value[p1])",
+        "round[p2] > 1 /\\ ExistsQuorum(round[p2] - 1, value[p2])",
+        "ExistsQuorum(r, value[p1])",
+        "ExistsQuorum(r, value[p2])",
+        "ExistsQuorum(r, v)"
+    ],
+    "preds_alt" : [],
+    "safety"  :  "AgreementInv",
+    "constants"  :  [
+        "CONSTANTS",
+        "N = 6",
+        "T = 1",
+        "F = 1",
+        "Rounds = { 1, 2 }"
+    ],
+    "constraint"  :  "",
+    "quant_inv"  :  "\\A p1, p2 \\in Correct: \\A r \\in Rounds: \\A v \\in Values: \\A a \\in AllV: \\A b \\in BOOLEAN: ",
+    "quant_inv_alt"  :  null,
+    "quant_vars": ["p1", "p2", "r", "v", "a", "b"],
+    "model_consts"  :  "",
+    "symmetry" : false,
+    "typeok"  :  "TypeOKRandom",
+    "simulate"  :  true,
+    "tlaps_proof_config": {
+        "assumes": [
+        ],
+        "lemma_def_expands": {
+        },
+        "action_def_expands":{
+        }
+    }
+}
