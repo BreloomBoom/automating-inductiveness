@@ -9,4 +9,4 @@ SWISS - takes Ivy Specification
 
 ## Protocols
 
-[https://dl.acm.org/doi/pdf/10.1145/800221.806707](Ben-Or Byzantine Consensus Protocol)
+[Ben-Or Byzantine Consensus Protocol](https://dl.acm.org/doi/pdf/10.1145/800221.806707)
