@@ -6,7 +6,7 @@ type node
 interpret node -> nat
 
 relation succ(X: node, Y: node)
-axiom forall X. forall Y. forall Z. succ(X, Y) <-> (X < Y & ~(X < Z & Z < Y))
+axiom forall X. forall Y. forall Z. succ(X, Y) -> (X < Y & ~(X < Z & Z < Y))
 
 individual n: node
 individual t: node
