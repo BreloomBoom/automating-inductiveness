@@ -1,5 +1,6 @@
 ------------------------------ MODULE Ben_Or -----------------------------
 
+\* Copy of Randomization.tla is in repository
 EXTENDS FiniteSets, Integers, Randomization
 
 CONSTANTS
