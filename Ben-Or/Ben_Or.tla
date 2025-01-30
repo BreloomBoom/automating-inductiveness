@@ -1,4 +1,4 @@
------------------------------- MODULE Ben_Or83 -----------------------------
+------------------------------ MODULE Ben_Or -----------------------------
 
 EXTENDS FiniteSets, Integers, Randomization
 
