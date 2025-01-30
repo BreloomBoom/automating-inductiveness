@@ -15,6 +15,9 @@ e.g. `action step(n: ...` is allowed but `action step(N: ...` is not
 
 e.g. `type n = {-1}` and `type n = {(1 + 1)}` are not allowed
 
-4. Semi colons after every line should be added (especially requires!)
+4. Semi colons after every line should be added
 
 5. Functions are immutable and so relations should be used
+
+SWISS Problems:
+- The language is either 1.5 or 1.6 so keywords such as `require` are not allowed

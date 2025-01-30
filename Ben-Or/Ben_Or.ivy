@@ -1,4 +1,4 @@
-#lang ivy1.7
+#lang ivy1.6
 
 # almost everything is in the TLA+ spec is a natural number here
 
@@ -71,7 +71,7 @@ after init {
 
 # extra step to implement non-determinism and get values
 action step0(p: node) = {
-    require correct(p) & value(p, 2);
+    assume correct(p) & value(p, 2);
 
     value(p, 2) := false;
     if * {
@@ -83,8 +83,8 @@ action step0(p: node) = {
 
 action step1(p: node, r: rounds, v: allV) = {
     # wait for all correct processes to have a value before starting
-    require forall P. correct(P) -> (~value(p, 2)); 
-    require correct(p) & step(p, 1) & round(p, r) & value(p, v);
+    assume forall P. correct(P) -> (~value(p, 2)); 
+    assume correct(p) & step(p, 1) & round(p, r) & value(p, v);
 
     type1(r, p, 2) := false;
     type1(r, p, v) := true;
@@ -94,15 +94,15 @@ action step1(p: node, r: rounds, v: allV) = {
 }
 
 action step2(p: node, r: rounds, q: quorum, q0: quorum, q1: quorum) = {
-    require correct(p) & step(p, 2) & round(p, r) & card(q) = n - t;
+    assume correct(p) & step(p, 2) & round(p, r) & card(q) = n - t;
 
     # q is the set of received messages
     # q0 is the set of received messages with value 0
     # q1 is the set of received messages with value 1
-    require forall P. member(P, q) -> (type1(r, P, 0) | type1(r, P, 1));
-    require forall P. (member(P, q0) | member(P, q1)) -> member(P, q);
-    require forall P. member(P, q0) -> type1(r, P, 0);
-    require forall P. member(P, q1) -> type1(r, P, 1);
+    assume forall P. member(P, q) -> (type1(r, P, 0) | type1(r, P, 1));
+    assume forall P. (member(P, q0) | member(P, q1)) -> member(P, q);
+    assume forall P. member(P, q0) -> type1(r, P, 0);
+    assume forall P. member(P, q1) -> type1(r, P, 1);
 
     if 2 * card(q0) > n + t {
         type2D(r, p, 2) := false;
@@ -120,13 +120,13 @@ action step2(p: node, r: rounds, q: quorum, q0: quorum, q1: quorum) = {
 }
 
 action step3(p: node, r: rounds, q: quorum, q0: quorum, q1: quorum) = {
-    require correct(p) & step(p, 3) & round(p, r) & card(q) = n - t;
-    require r + 1 <= rmax;
+    assume correct(p) & step(p, 3) & round(p, r) & card(q) = n - t;
+    assume r + 1 <= rmax;
 
-    require forall P. member(P, q) -> (type2D(r, P, 0) | type2D(r, P, 1) | type2Q(r, P));
-    require forall P. (member(P, q0) | member(P, q1)) -> member(P, q);
-    require forall P. member(P, q0) -> type2D(r, P, 0);
-    require forall P. member(P, q1) -> type2D(r, P, 1);
+    assume forall P. member(P, q) -> (type2D(r, P, 0) | type2D(r, P, 1) | type2Q(r, P));
+    assume forall P. (member(P, q0) | member(P, q1)) -> member(P, q);
+    assume forall P. member(P, q0) -> type2D(r, P, 0);
+    assume forall P. member(P, q1) -> type2D(r, P, 1);
 
     if card(q0) <= t & card(q1) <= t {
         if * {
@@ -161,7 +161,7 @@ action step3(p: node, r: rounds, q: quorum, q0: quorum, q1: quorum) = {
 
 # injecting each type of message once
 action faultyType1(p: node, r: rounds) = {
-    require all(p) & ~correct(p) & r <= rmax & type1(r, p, 2);
+    assume all(p) & ~correct(p) & r <= rmax & type1(r, p, 2);
     type1(r, p, 2) := false;
     if * {
         type1(r, p, 0) := true;
@@ -171,7 +171,7 @@ action faultyType1(p: node, r: rounds) = {
 }
 
 action faultyType2D(p: node, r: rounds) = {
-    require all(p) & ~correct(p) & r <= rmax & type2D(r, p, 2);
+    assume all(p) & ~correct(p) & r <= rmax & type2D(r, p, 2);
     type2D(r, p, 2) := false;
     if * {
         type2D(r, p, 0) := true;
@@ -181,11 +181,11 @@ action faultyType2D(p: node, r: rounds) = {
 }
 
 action faultyType2Q(p: node, r: rounds) = {
-    require all(p) & ~correct(p) & r <= rmax & ~type2Q(r, p);
+    assume all(p) & ~correct(p) & r <= rmax & ~type2Q(r, p);
     type2Q(r, p) := true;
 }
 
-invariant forall P. forall Q. forall V. 
+conjecture forall P. forall Q. forall V. 
     (correct(P) & correct(Q) & decision(P) & decision(Q)) -> (value(P, V) = value(Q, V))
 
 # required for ivy_check to recognise these actions
