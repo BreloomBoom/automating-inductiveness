@@ -191,6 +191,52 @@ ExistsQuorum(r, v) ==
 \* Used in scimitar, the successor of endive
 CTICost == 0
 
+-----------------------------------------------------------------------------
+
+\* Generated invariant by endive
+
+Inv252_1_0_def == 
+    \A p1 \in Correct:
+        \/ (round[p1] > 1 /\ ExistsQuorum(round[p1] - 1, value[p1]))
+        \/ ~(p1 \in decision)
+
+Inv644_1_0_def ==
+    \A p1, p2 \in Correct: \A r \in Rounds:
+        \/ type2D[r][p1] = NoDecision
+        \/ ~(type2Q[r][p2] = TRUE)
+
+Inv914_1_1_def == 
+    \A p1 \in Correct: \A r \in Rounds: \A v \in Values:
+        \/ ~ExistsQuorum(r, v)
+        \/ ~(type2D[r][p1] = NoDecision)
+
+Inv2287_2_2_def == 
+    \A p1 \in Correct: \A r \in Rounds:
+        \/ p1 \in decision
+        \/ type2D[r][p1] = NoDecision
+        \/ step[p1] = 3
+
+Inv5474_2_0_def == 
+    \A p1, p2 \in Correct: \A r \in Rounds:
+        \/ step[p1] = 2
+        \/ ~(type2D[r][p1] = NoDecision)
+        \/ type2D[r][p2] = NoDecision
+
+Inv5191_2_0_def == 
+    \A p1, p2 \in Correct: \A r \in Rounds:
+        \/ step[p1] = 2
+        \/ type2Q[r][p1] = TRUE 
+        \/ ~(type2Q[r][p2] = TRUE)
+
+IndAuto ==
+  /\ AgreementInv
+  /\ Inv252_1_0_def
+  /\ Inv644_1_0_def
+  /\ Inv914_1_1_def
+  /\ Inv2287_2_2_def
+  /\ Inv5474_2_0_def
+  /\ Inv5191_2_0_def
+
 =============================================================================
 \* Modification History
 \* Last modified Thu Jan 16 21:00:57 AEDT 2025 by breloom
