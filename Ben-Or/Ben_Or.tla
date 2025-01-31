@@ -58,6 +58,7 @@ VARIABLES
 
 Step1(p) ==
   /\ step[p] = 1
+  /\ round[p] + 1 \in Rounds
   /\ type1' = [ type1 EXCEPT ![round[p]][p] = value[p] ]
   /\ step' = [ step EXCEPT ![p] = 2 ]
   /\ UNCHANGED << value, decision, round, type2D, type2Q >>
@@ -92,7 +93,6 @@ Step3(p) ==
              \/ /\ (\A v \in Values: weights[v] < T + 1)
                 /\ (\E nextV \in Values: value' = [ value EXCEPT ![p] = nextV ])
                 /\ decision' = decision
-  /\ round[p] + 1 \in Rounds
   /\ round' = [ round EXCEPT ![p] = round[p] + 1 ]
   /\ step' = [ step EXCEPT ![p] = 1 ]
   /\ UNCHANGED << type1, type2D, type2Q >>
@@ -118,11 +118,6 @@ Init ==
   /\ decision = {}
   /\ round = [ r \in Correct |-> 1 ]
   /\ step = [ r \in Correct |-> 1 ]
-    
-  \* Injects faulty messages considering one combination
-  /\ type1 = [ r \in Rounds |-> [ p \in All |-> IF p \in Correct THEN NoDecision ELSE CHOOSE v \in AllV : TRUE ] ]
-  /\ type2D = [ r \in Rounds |-> [ p \in All |-> IF p \in Correct THEN NoDecision ELSE CHOOSE v \in AllV : TRUE ] ]
-  /\ type2Q = [ r \in Rounds |-> [ p \in All |-> IF p \in Correct THEN FALSE ELSE CHOOSE v \in BOOLEAN : TRUE ] ]
 
   \* Injects faulty messages at the start in all possible combinations
   \* /\ \E m1 \in [ Rounds -> [ All -> AllV ] ]:
@@ -134,6 +129,14 @@ Init ==
   \* /\ \E m2Q \in [ Rounds -> [ All -> BOOLEAN ] ]:
   \*       /\ type2Q = m2Q
   \*       /\ (\A p \in Correct, r \in Rounds: type2Q[r][p] = FALSE)
+
+  \* Optimisation for model checking on TLC with Rounds = {1, 2}
+  /\ \E v \in AllV: 
+        type1 = [ r \in Rounds |-> [ p \in All |-> IF p \in Correct THEN NoDecision ELSE v ] ]
+  /\ \E v \in AllV: 
+        type2D = [ r \in Rounds |-> [ p \in All |-> IF p \in Correct THEN NoDecision ELSE v ] ]
+  /\ \E b \in BOOLEAN: 
+        type2Q = [ r \in Rounds |-> [ p \in All |-> IF p \in Correct THEN FALSE ELSE b ] ]
 
 CorrectStep ==
   \E p \in Correct:
@@ -157,11 +160,10 @@ TypeOK ==
   /\ type1 \in [ Rounds -> [ All -> AllV ] ] \* 3^(RN)
   /\ type2D \in [ Rounds -> [ All -> AllV ] ] \* 3^(RN)
   /\ type2Q \in [ Rounds -> [ All -> BOOLEAN ] ] \* 2^(RN)
-  
-  \* /\ \A r \in Rounds: 
-  \*       { p \in All : type2D[r][p] # NoDecision 
-  \*                  /\ type2Q[r][p] = TRUE 
-  \*                  /\ p \in Correct } = {}
+  /\ \A r \in Rounds: 
+        { p \in All : type2D[r][p] # NoDecision 
+                   /\ type2Q[r][p] = TRUE 
+                   /\ p \in Correct } = {}
        
 Num == 8
 
@@ -217,6 +219,7 @@ Inv2287_2_2_def ==
         \/ type2D[r][p1] = NoDecision
         \/ step[p1] = 3
 
+\* Not an actual invariant so does not work
 Inv5474_2_0_def == 
     \A p1, p2 \in Correct: \A r \in Rounds:
         \/ step[p1] = 2
