@@ -58,7 +58,7 @@ VARIABLES
 
 Step1(p) ==
   /\ step[p] = 1
-  /\ round[p] + 1 \in Rounds
+  /\ round[p] \in Rounds
   /\ type1' = [ type1 EXCEPT ![round[p]][p] = value[p] ]
   /\ step' = [ step EXCEPT ![p] = 2 ]
   /\ UNCHANGED << value, decision, round, type2D, type2Q >>
@@ -114,7 +114,12 @@ Step3(p) ==
 Init == 
   /\ N > 5 * T
   /\ T >= F
-  /\ value \in [ Correct -> Values ] 
+  \* /\ value \in [ Correct -> Values ] 
+
+  \* Optisation accounting for symmetries of starting values
+  /\ value \in { [ p \in Correct |-> 0 ], 
+                 [ p \in Correct |-> IF p = 1 THEN 1 ELSE 0 ],
+                 [ p \in Correct |-> IF p = 1 \/ p = 2 THEN 1 ELSE 0 ] }
   /\ decision = {}
   /\ round = [ r \in Correct |-> 1 ]
   /\ step = [ r \in Correct |-> 1 ]
@@ -130,7 +135,7 @@ Init ==
   \*       /\ type2Q = m2Q
   \*       /\ (\A p \in Correct, r \in Rounds: type2Q[r][p] = FALSE)
 
-  \* Optimisation for model checking on TLC with Rounds = {1, 2}
+  \* Optimisation for model checking on TLC with Rounds = {1}
   /\ \E v \in AllV: 
         type1 = [ r \in Rounds |-> [ p \in All |-> IF p \in Correct THEN NoDecision ELSE v ] ]
   /\ \E v \in AllV: 
@@ -138,11 +143,14 @@ Init ==
   /\ \E b \in BOOLEAN: 
         type2Q = [ r \in Rounds |-> [ p \in All |-> IF p \in Correct THEN FALSE ELSE b ] ]
 
+Step1Action == \E p \in Correct: Step1(p)
+Step2Action == \E p \in Correct: Step2(p)
+Step3Action == \E p \in Correct: Step3(p)
+
 CorrectStep ==
-  \E p \in Correct:
-    \/ Step1(p)
-    \/ Step2(p)
-    \/ Step3(p)
+  \/ Step1Action
+  \/ Step2Action
+  \/ Step3Action
 
 Next == CorrectStep \* \/ FaultyStep
 
@@ -161,9 +169,9 @@ TypeOK ==
   /\ type2D \in [ Rounds -> [ All -> AllV ] ] \* 3^(RN)
   /\ type2Q \in [ Rounds -> [ All -> BOOLEAN ] ] \* 2^(RN)
   /\ \A r \in Rounds: 
-        { p \in All : type2D[r][p] # NoDecision 
-                   /\ type2Q[r][p] = TRUE 
-                   /\ p \in Correct } = {}
+        { p \in All : /\ type2D[r][p] # NoDecision 
+                      /\ type2Q[r][p] = TRUE 
+                      /\ p \in Correct } = {}
        
 Num == 8
 
@@ -197,49 +205,6 @@ CTICost == 0
 -----------------------------------------------------------------------------
 
 \* Generated invariant by endive
-
-Inv252_1_0_def == 
-    \A p1 \in Correct:
-        \/ (round[p1] > 1 /\ ExistsQuorum(round[p1] - 1, value[p1]))
-        \/ ~(p1 \in decision)
-
-Inv644_1_0_def ==
-    \A p1, p2 \in Correct: \A r \in Rounds:
-        \/ type2D[r][p1] = NoDecision
-        \/ ~(type2Q[r][p2] = TRUE)
-
-Inv914_1_1_def == 
-    \A p1 \in Correct: \A r \in Rounds: \A v \in Values:
-        \/ ~ExistsQuorum(r, v)
-        \/ ~(type2D[r][p1] = NoDecision)
-
-Inv2287_2_2_def == 
-    \A p1 \in Correct: \A r \in Rounds:
-        \/ p1 \in decision
-        \/ type2D[r][p1] = NoDecision
-        \/ step[p1] = 3
-
-\* Not an actual invariant so does not work
-Inv5474_2_0_def == 
-    \A p1, p2 \in Correct: \A r \in Rounds:
-        \/ step[p1] = 2
-        \/ ~(type2D[r][p1] = NoDecision)
-        \/ type2D[r][p2] = NoDecision
-
-Inv5191_2_0_def == 
-    \A p1, p2 \in Correct: \A r \in Rounds:
-        \/ step[p1] = 2
-        \/ type2Q[r][p1] = TRUE 
-        \/ ~(type2Q[r][p2] = TRUE)
-
-IndAuto ==
-  /\ AgreementInv
-  /\ Inv252_1_0_def
-  /\ Inv644_1_0_def
-  /\ Inv914_1_1_def
-  /\ Inv2287_2_2_def
-  /\ Inv5474_2_0_def
-  /\ Inv5191_2_0_def
 
 =============================================================================
 \* Modification History

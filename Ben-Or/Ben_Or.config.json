@@ -27,7 +27,7 @@
         "N = 6",
         "T = 1",
         "F = 1",
-        "Rounds = { 1, 2 }"
+        "Rounds = { 1 }"
     ],
     "constraint"  :  "",
     "quant_inv"  :  "\\A p1, p2 \\in Correct: \\A r \\in Rounds: \\A v \\in Values:",
