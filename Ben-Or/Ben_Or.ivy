@@ -40,6 +40,8 @@ type pset # process set
 relation pMember(P: node, S: pset)
 
 # receiving at least n - t messages where n > 5t
+# the intersection of any 5 quorums must be nonempty
+# the size should be around 4t + 1
 type quorum
 relation qMember(P: node, Q: quorum)
 axiom forall Q1. forall Q2. forall Q3. forall Q4. forall Q5. exists P.
@@ -47,11 +49,14 @@ axiom forall Q1. forall Q2. forall Q3. forall Q4. forall Q5. exists P.
     qMember(P, Q3) & qMember(P, Q4) & qMember(P, Q5)
 
 # receiving at least t + 1 messages
+# should have a nonempty intersection with any quorum
 type tset # t (+1) set
 relation tMember(P: node, T: tset)
 axiom forall T. forall Q. exists P. all(P) & tMember(P, T) & qMember(P, Q)
 
-# receiving at least (n + t) / 2 messages. this is approx n - 2t
+# receiving at least (n + t) / 2 messages (approx n - 2t or around 3t + 1)
+# any intersection of two hsets should have t + 1 messages in common
+# an intersection of two hsets would need to intersect with any quorum
 type hset # half (of n + t) set
 relation hMember(P: node, H: hset)
 axiom forall H1. forall H2. forall Q. exists P. 
