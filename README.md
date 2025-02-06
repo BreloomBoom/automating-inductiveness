@@ -13,3 +13,7 @@ This repository holds specifications for distributed protocols in TLA+ and Ivy. 
 ## Protocols
 
 [Ben-Or Byzantine Consensus Protocol](https://dl.acm.org/doi/pdf/10.1145/800221.806707)
+
+There are some simplifications to Ben-Or made to try reduce its state space.
+
+[Bracha Byzantine Consensus Protocol](https://core.ac.uk/download/pdf/82523202.pdf)
