@@ -47,12 +47,16 @@ relation qMember(P: node, Q: quorum)
 axiom forall Q1. forall Q2. forall Q3. forall Q4. forall Q5. exists P.
     all(P) & qMember(P, Q1) & qMember(P, Q2) & 
     qMember(P, Q3) & qMember(P, Q4) & qMember(P, Q5)
+axiom forall Q1. forall Q2. forall Q3. forall Q4. exists P.
+    correct(P) & qMember(P, Q1) & qMember(P, Q2) & 
+    qMember(P, Q3) & qMember(P, Q4)
 
 # receiving at least t + 1 messages
 # should have a nonempty intersection with any quorum
 type tset # t (+1) set
 relation tMember(P: node, T: tset)
 axiom forall T. forall Q. exists P. all(P) & tMember(P, T) & qMember(P, Q)
+axiom forall T. exists P. correct(P) & tMember(P, T)
 
 # receiving at least (n + t) / 2 messages (approx n - 2t or around 3t + 1)
 # any intersection of two hsets should have t + 1 messages in common
@@ -61,6 +65,13 @@ type hset # half (of n + t) set
 relation hMember(P: node, H: hset)
 axiom forall H1. forall H2. forall Q. exists P. 
     all(P) & hMember(P, H1) & hMember(P, H2) & qMember(P, Q)
+axiom forall H1. forall H2. exists P. 
+    correct(P) & hMember(P, H1) & hMember(P, H2)
+
+# axioms that every type of set is in pset
+axiom forall Q. exists S. forall P. qMember(P, Q) <-> pMember(P, S)
+axiom forall T. exists S. forall P. tMember(P, T) <-> pMember(P, S)
+axiom forall H. exists S. forall P. hMember(P, H) <-> pMember(P, S)
 
 ### init and possible actions
 
