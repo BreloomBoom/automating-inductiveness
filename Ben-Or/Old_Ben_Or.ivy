@@ -1,44 +1,37 @@
 #lang ivy1.6
 
-module total_order(r) = {
-    axiom r(X, X)
-    axiom r(X, Y) & r(Y, Z) -> r(X, Z)
-    axiom r(X, Y) & r(Y, X) -> X = Y
-    axiom r(X, Y) | r(Y, X)
-}
-
 type node
+interpret node -> nat
+
+individual n: node # number of processes
+individual t: node # upper bound in number of byzantine processes
+individual f: node # actual number of byzantine processes
+axiom (n >= 1) & (n > 5 * t) & (t >= f)
+
+# correct processes
 function correct(P: node): bool
+definition correct(P) = ((1 <= P) & (P <= n - f))
+
+# all processes
+function all(P: node): bool
+definition all(P) = ((1 <= P) & (P <= n))
 
 type rounds
-individual zero: rounds
+interpret rounds -> nat
+individual rmax: rounds # maximum number of rounds
 
-relation le(X: rounds, Y: rounds)
-instantiate total_order(le)
-axiom forall X. le(zero, X)
-
-# enumerated types are not allowed in SWISS
-# replacing these with a kind of binary
-# type value = {v1, v2}
-# type steps = {s1,s2,s3}
+type values = {v0,v1}
+type steps = {s1,s2,s3}
 
 # functions are immutable so they are seen as relations unlike the TLA+ spec
 relation value(P: node) # if P is in value, then the current x_P = 1
 relation decision(P: node)
 relation round(P: node, R: rounds)
+relation step(P: node, S: steps)
 
-# the process P is on step 2 * stepTwos(P) + stepOnes(P)
-relation stepTwos(P: node)
-relation stepOnes(P: node)
-
-# bools cannot be an argument to a relation
-relation type1T(R: rounds, P: node) # true iff process P sent (1, R, True)
-relation type1F(R: rounds, P: node) # true iff process P sent (1, R, False)
-relation type2DT(R: rounds, P: node) # true iff process P sent (2, R, D, True)
-relation type2DF(R: rounds, P: node) # true iff process P sent (2, R, D, False)
-relation type2Q(R: rounds, P: node) # true iff process P sent (2, R, Q)
-
-relation roundUsed(R: rounds) # determines if this round was used
+relation type1(R: rounds, P: node, V: values)
+relation type2D(R: rounds, P: node, V: values)
+relation type2Q(R: rounds, P: node)
 
 ### notion of receiving messages through a subset of processes
 
@@ -52,7 +45,7 @@ relation pMember(P: node, S: pset)
 type quorum
 relation qMember(P: node, Q: quorum)
 axiom forall Q1. forall Q2. forall Q3. forall Q4. forall Q5. exists P.
-    qMember(P, Q1) & qMember(P, Q2) & 
+    all(P) & qMember(P, Q1) & qMember(P, Q2) & 
     qMember(P, Q3) & qMember(P, Q4) & qMember(P, Q5)
 axiom forall Q1. forall Q2. forall Q3. forall Q4. exists P.
     correct(P) & qMember(P, Q1) & qMember(P, Q2) & 
@@ -62,7 +55,7 @@ axiom forall Q1. forall Q2. forall Q3. forall Q4. exists P.
 # should have a nonempty intersection with any quorum
 type tset # t (+1) set
 relation tMember(P: node, T: tset)
-axiom forall T. forall Q. exists P. tMember(P, T) & qMember(P, Q)
+axiom forall T. forall Q. exists P. all(P) & tMember(P, T) & qMember(P, Q)
 axiom forall T. exists P. correct(P) & tMember(P, T)
 
 # receiving at least (n + t) / 2 messages (approx n - 2t or around 3t + 1)
@@ -71,7 +64,7 @@ axiom forall T. exists P. correct(P) & tMember(P, T)
 type hset # half (of n + t) set
 relation hMember(P: node, H: hset)
 axiom forall H1. forall H2. forall Q. exists P. 
-    hMember(P, H1) & hMember(P, H2) & qMember(P, Q)
+    all(P) & hMember(P, H1) & hMember(P, H2) & qMember(P, Q)
 axiom forall H1. forall H2. exists P. 
     correct(P) & hMember(P, H1) & hMember(P, H2)
 
@@ -86,75 +79,68 @@ after init {
     decision(P) := false;
 
     round(P, R) := false;
-    round(P, zero) := true;
+    round(P, 0) := true;
 
-    stepTwos(P) := false;
-    stepOnes(P) := true;
+    step(P, S) := false;
+    step(P, s1) := true;
 
-    type1T(R, P) := false;
-    type1F(R, P) := false;
+    type1(R, P, V) := false;
 
-    type2DT(R, P) := false;
-    type2DF(R, P) := false;
+    type2D(R, P, V) := false;
     type2Q(R, P) := false;
-
-    roundUsed(R) := false;
-    roundUsed(zero) := true;
 }
 
 action step1(p: node, r: rounds) = {
     # wait for all correct processes to have a value before starting
-    assume correct(p) & ~stepTwos(p) & stepOnes(p) & round(p, r);
+    assume correct(p) & step(p, s1) & round(p, r) & r <= rmax;
 
-    stepOnes(p) := false;
-    stepTwos(p) := true;
+    step(p, s1) := false;
+    step(p, s2) := true;
 
     if value(p) {
-        type1T(r, p) := true;
+        type1(r, p, v1) := true;
     } else {
-        type1F(r, p) := true;
+        type1(r, p, v0) := true;
     }
 }
 
 action step2(p: node, r: rounds, q: quorum, q0: pset, q1: pset) = {
-    assume correct(p) & stepTwos(p) & ~stepOnes(p) & round(p, r);
+    assume correct(p) & step(p, s2) & round(p, r);
 
     # q is the set of received messages
     # q0 is the set of received messages with value 0
     # q1 is the set of received messages with value 1
-    assume forall P. qMember(P, q) -> (type1T(r, P) | type1F(r, P));
+    assume forall P. qMember(P, q) -> (type1(r, P, v0) | type1(r, P, v1));
     assume forall P. (pMember(P, q0) | pMember(P, q1)) <-> qMember(P, q);
-    assume forall P. pMember(P, q0) -> type1F(r, P);
-    assume forall P. pMember(P, q1) -> type1T(r, P);
+    assume forall P. pMember(P, q0) -> type1(r, P, v0);
+    assume forall P. pMember(P, q1) -> type1(r, P, v1);
 
-    stepOnes(p) := true;
+    step(p, s2) := false;
+    step(p, s3) := true;
 
     if exists H. forall P. pMember(P, q0) <-> hMember(P, H) {
-        type2DF(r, p) := true;
+        type2D(r, p, v0) := true;
     } else {
         if exists H. forall P. pMember(P, q1) <-> hMember(P, H) {
-            type2DT(r, p) := true;
+            type2D(r, p, v1) := true;
         } else {
             type2Q(r, p) := true;
         }
     }
 }
 
-action step3(p: node, r: rounds, nextr: rounds, q: quorum, q0: pset, q1: pset) = {
-    assume correct(p) & stepTwos(p) & stepOnes(p) & round(p, r);
-    assume (forall R. roundUsed(R) -> le(R, r)) -> (le(r, nextr) & r ~= nextr);
-    assume (exists R. roundUsed(R) & le(r, R) & r ~= R) ->
-           (forall X. (roundUsed(X) & le(r, X) & r ~= X) -> le(nextr, X));
+action step3(p: node, r: rounds, q: quorum, q0: pset, q1: pset) = {
+    assume correct(p) & step(p, s3) & round(p, r);
 
-    assume forall P. qMember(P, q) -> (type2DT(r, P) | type2DF(r, P) | type2Q(r, P));
+    assume forall P. qMember(P, q) -> (type2D(r, P, v0) | type2D(r, P, v1) | type2Q(r, P));
     assume forall P. (pMember(P, q0) | pMember(P, q1)) <-> qMember(P, q);
-    assume forall P. pMember(P, q0) -> type2DF(r, P);
-    assume forall P. pMember(P, q1) -> type2DT(r, P);
+    assume forall P. pMember(P, q0) -> type2D(r, P, v0);
+    assume forall P. pMember(P, q1) -> type2D(r, P, v1);
 
     round(p, r) := false;
-    round(p, nextr) := true;
-    roundUsed(nextr) := true;
-    stepTwos(p) := false;
+    round(p, r + 1) := true;
+    step(p, s3) := false;
+    step(p, s1) := true;
 
     # a bit different to TLA+ since if both card(q0) > t and card(q1) > t,
     # the TLA+ spec would randomly choose a value to go ahead with
@@ -175,11 +161,37 @@ action step3(p: node, r: rounds, nextr: rounds, q: quorum, q0: pset, q1: pset) =
     }
 }
 
+# injecting each type of message once
+action faultyType1(p: node, r: rounds) = {
+    assume all(p) & ~correct(p) & r <= rmax & ~(type1(r, p, v0) | type1(r, p, v1));
+    if * {
+        type1(r, p, v0) := true;
+    } else {
+        type1(r, p, v1) := true;
+    }
+}
+
+action faultyType2D(p: node, r: rounds) = {
+    assume all(p) & ~correct(p) & r <= rmax & ~(type2D(r, p, v0) | type2D(r, p, v1));
+    if * {
+        type2D(r, p, v0) := true;
+    } else {
+        type2D(r, p, v1) := true;
+    }
+}
+
+action faultyType2Q(p: node, r: rounds) = {
+    assume all(p) & ~correct(p) & r <= rmax & ~type2Q(r, p);
+    type2Q(r, p) := true;
+}
+
 conjecture forall P. forall Q. 
     (correct(P) & correct(Q) & decision(P) & decision(Q)) -> (value(P) <-> value(Q))
 
 # required for ivy_check to recognise these actions
-# no faulty actions as the conjectures dont say anything about faulty nodes
 export step1
 export step2
 export step3
+export faultyType1
+export faultyType2D
+export faultyType2Q

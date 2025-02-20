@@ -22,4 +22,5 @@ e.g. `type n = {-1}` and `type n = {(1 + 1)}` are not allowed
 6. IVy expresses everything in first order logic so arithmetic cannot be defined. Thresholds for broadcast protocols were worked out through properties about intersection.
 
 SWISS Problems:
-- The language is either 1.5 or 1.6 so keywords such as `require` are not allowed
+- The language is 1.5 so keywords such as `require` are not allowed
+- The only allowed types are uninterpreted, bool and function sorts (no interpreted sorts)
