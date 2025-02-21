@@ -199,13 +199,6 @@ ExistsQuorum(r, v) ==
     /\ nv >= T + 1
     /\ 2 * nv > N + T
 
-\* Used in scimitar, the successor of endive
-CTICost == 0
-
------------------------------------------------------------------------------
-
-\* Generated invariant by endive
-
 =============================================================================
 \* Modification History
 \* Last modified Thu Jan 16 21:00:57 AEDT 2025 by breloom
